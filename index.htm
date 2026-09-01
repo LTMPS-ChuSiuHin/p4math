@@ -338,8 +338,8 @@
         // 課題資料設定區 (方便日後修改與新增網址)
         // ==========================================
         const topicsData = [
-            { id: 1, unit: "四上單元一", name: "乘法", practiceUrl: "https://ltmps-chusiuhin.github.io/p4math/ch1.htm", learnUrl: "" },
-            { id: 2, unit: "四上單元二", name: "除法", practiceUrl: "https://ltmps-chusiuhin.github.io/p4math/ch2.htm", learnUrl: "" },
+            { id: 1, unit: "四上單元一", name: "乘法", practiceUrl: "https://ltmps-chusiuhin.github.io/p4math1/", learnUrl: "" },
+            { id: 2, unit: "四上單元二", name: "除法", practiceUrl: "https://ltmps-chusiuhin.github.io/p4math2/", learnUrl: "" },
             { id: 3, unit: "四上單元三", name: "四邊形", practiceUrl: "", learnUrl: "" },
             { id: 4, unit: "四上單元四", name: "圖形分割和拼砌", practiceUrl: "", learnUrl: "" },
             { id: 5, unit: "四上單元五", name: "一筆畫", practiceUrl: "", learnUrl: "" },
@@ -351,7 +351,7 @@
         let currentMode = ''; 
 
         // ==========================================
-        // Google 登入邏輯
+        // Google 登入邏輯 與 本地儲存 (localStorage)
         // ==========================================
         function parseJwt(token) {
             try {
@@ -361,9 +361,12 @@
             } catch (e) { return null; }
         }
 
-        function handleCredentialResponse(response) {
-            const payload = parseJwt(response.credential);
-            if(payload) {
+        // 解析 Token 並渲染使用者名稱、顯示主頁面
+        function verifyAndApplyUser(googleToken) {
+            const payload = parseJwt(googleToken);
+            
+            // 驗證 Token 是否存在且未過期 (exp 是秒數，需要乘以 1000 轉換成毫秒)
+            if (payload && payload.exp && (payload.exp * 1000 > Date.now())) {
                 const lastName = payload.family_name || payload.name || "同學"; 
                 
                 const userInfo = document.getElementById('user-info');
@@ -371,19 +374,48 @@
                 userInfo.style.display = 'block';
 
                 showScreen('home-screen');
+                return true;
+            } else {
+                // 如果 Token 無效或已過期，清除 localStorage 紀錄
+                localStorage.removeItem('user_token');
+                return false;
+            }
+        }
+
+        function handleCredentialResponse(response) {
+            const googleToken = response.credential;
+            if (googleToken) {
+                // 【核心新增】把 Token 寫入 localStorage
+                localStorage.setItem('user_token', googleToken);
+                
+                // 套用用戶狀態並進入主頁
+                verifyAndApplyUser(googleToken);
             }
         }
 
         window.onload = function () {
-            // ⚠️ 這裡填寫你的 Google Client ID
+            // 1. 頁面載入時，先檢查 localStorage 是否已存有 Token
+            const savedToken = localStorage.getItem('user_token');
+            let isLoggedIn = false;
+
+            if (savedToken) {
+                isLoggedIn = verifyAndApplyUser(savedToken);
+            }
+
+            // 2. 初始化 Google SDK
             google.accounts.id.initialize({
                 client_id: "573911894747-0c28hfr0bmkjnn8pkm2msg6sjal1thqe.apps.googleusercontent.com", 
-                callback: handleCredentialResponse
+                callback: handleCredentialResponse,
+                auto_select: true // 開啟自動登入提示
             });
-            google.accounts.id.renderButton(
-                document.getElementById("google-btn-container"),
-                { theme: "outline", size: "large", shape: "pill", width: 250 }
-            );
+
+            // 3. 如果尚未登入，顯示 Google 登入按鈕
+            if (!isLoggedIn) {
+                google.accounts.id.renderButton(
+                    document.getElementById("google-btn-container"),
+                    { theme: "outline", size: "large", shape: "pill", width: 250 }
+                );
+            }
         };
 
         // ==========================================
