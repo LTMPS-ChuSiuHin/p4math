@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>四年級數學綜合學習平台</title>
+    <!-- 引入 Google 登入 API -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- 引入圓潤可愛的字體 -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --accent-1: #00cec9;
+            --accent-2: #fd79a8;
+            --bg-gradient-1: #e0c3fc;
+            --bg-gradient-2: #8ec5fc;
+            --text-main: #2d3436;
+            --card-bg: rgba(255, 255, 255, 0.95);
+        }
+
+        body {
+            font-family: 'Nunito', 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 背景漂浮特效 */
+        .bg-particles {
+            position: fixed; width: 100%; height: 100%; top: 0; left: 0;
+            pointer-events: none; z-index: -1; overflow: hidden;
+        }
+        .particle {
+            position: absolute; color: rgba(255, 255, 255, 0.5);
+            animation: floatUp linear infinite;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(110vh) rotate(0deg) scale(0.8); opacity: 1; }
+            100% { transform: translateY(-10vh) rotate(360deg) scale(1.2); opacity: 0; }
+        }
+
+        /* 標題列 */
+        header {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 15px 30px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-sizing: border-box;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* 動態漸變標題 */
+        header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 900;
+            background: linear-gradient(45deg, #ff758c, #ff7eb3, #4facfe, #00f2fe);
+            background-size: 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: textGlow 5s ease-in-out infinite;
+        }
+
+        @keyframes textGlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        #user-info {
+            font-weight: 800;
+            color: var(--primary);
+            background: #eef2f3;
+            padding: 8px 15px;
+            border-radius: 12px;
+            display: none;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        /* 畫面切換控制 */
+        .screen { display: none; width: 100%; max-width: 900px; text-align: center; position: relative; z-index: 10; }
+        .screen.active { display: block; animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* 登入區塊 */
+        .login-box {
+            background: var(--card-bg);
+            padding: 50px 40px;
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            max-width: 450px;
+            margin: 80px auto;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+        .login-box h2 { margin-top: 0; color: var(--primary); font-size: 26px; }
+
+        /* 模式選擇 (大圓角方格) */
+        .mode-container {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-top: 50px;
+        }
+
+        .mode-card-wrapper {
+            position: relative;
+            width: 240px;
+            height: 240px;
+        }
+
+        /* 魔法漸變光層特效 */
+        .mode-card-wrapper::before {
+            content: '';
+            position: absolute;
+            top: -5px; left: -5px; right: -5px; bottom: -5px;
+            background: linear-gradient(45deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb, #ff9a9e);
+            background-size: 400%;
+            z-index: -1;
+            border-radius: 45px;
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out;
+            animation: animateGlow 8s linear infinite;
+        }
+
+        .mode-card-wrapper:hover::before { opacity: 1; }
+
+        @keyframes animateGlow {
+            0% { background-position: 0 0; }
+            50% { background-position: 100% 0; }
+            100% { background-position: 0 0; }
+        }
+
+        .mode-card {
+            background: var(--card-bg);
+            width: 100%;
+            height: 100%;
+            border-radius: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            z-index: 1;
+        }
+
+        .mode-card:hover { transform: translateY(-8px); }
+        .mode-card .icon { font-size: 70px; margin-bottom: 15px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
+        .mode-card .title { font-size: 28px; font-weight: 900; color: var(--text-main); }
+        .mode-card .subtitle { font-size: 14px; color: #636e72; font-weight: bold; margin-top: 5px; opacity: 0; transition: 0.3s; }
+        .mode-card:hover .subtitle { opacity: 1; transform: translateY(5px); }
+
+        /* 課題選擇 (小圓角方格) */
+        .topic-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            background: var(--card-bg);
+            padding: 15px 25px;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+        }
+
+        .back-btn {
+            background: #f1f2f6; color: #2d3436; border: none; padding: 12px 20px;
+            border-radius: 15px; font-size: 16px; font-weight: 800; cursor: pointer;
+            transition: 0.2s; display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .back-btn:hover { background: #dfe6e9; transform: translateX(-3px); }
+        
+        .topic-title-text { font-size: 26px; font-weight: 900; margin: 0; }
+
+        .topics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 25px;
+            padding-bottom: 50px;
+        }
+
+        .topic-card {
+            background: var(--card-bg);
+            aspect-ratio: 1 / 1.1;
+            border-radius: 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px 15px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border: 2px solid transparent;
+            text-decoration: none;
+            color: inherit;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 卡片光澤掃過特效 */
+        .topic-card::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%);
+            transform: skewX(-25deg); transition: 0.5s; z-index: 1;
+        }
+        .topic-card:hover::after { left: 125%; transition: 0.5s; }
+
+        .topic-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .topic-card.practice-mode:hover { border-color: var(--accent-1); box-shadow: 0 15px 30px rgba(0, 206, 201, 0.2); }
+        .topic-card.learn-mode:hover { border-color: var(--accent-2); box-shadow: 0 15px 30px rgba(253, 121, 168, 0.2); }
+
+        .topic-card .unit { font-size: 14px; color: #a4b0be; font-weight: 800; background: #f1f2f6; padding: 4px 12px; border-radius: 20px;}
+        .topic-card .name { font-size: 20px; font-weight: 900; text-align: center; color: var(--text-main); line-height: 1.4; z-index: 2;}
+        .topic-card .status { font-size: 13px; font-weight: 800; padding: 6px 15px; border-radius: 12px; z-index: 2;}
+        
+        /* 啟用狀態的按鈕顏色 */
+        .topic-card.practice-mode .status { background: #e8f8f5; color: #00b894; }
+        .topic-card.learn-mode .status { background: #ffeaa7; color: #d63031; }
+
+        /* 未開放狀態 */
+        .topic-card.disabled { opacity: 0.65; cursor: not-allowed; border-color: transparent; }
+        .topic-card.disabled:hover { transform: none; box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+        .topic-card.disabled::after { display: none; }
+        .topic-card.disabled .status { background: #f1f2f6; color: #a4b0be; }
+
+    </style>
+</head>
+<body>
+
+    <!-- 背景漂浮粒子 -->
+    <div class="bg-particles" id="bg-particles"></div>
+
+    <header>
+        <h1>✨ 數學綜合學習平台</h1>
+        <div id="user-info"></div>
+    </header>
+
+    <!-- 1. 登入畫面 -->
+    <div id="login-screen" class="screen active">
+        <div class="login-box">
+            <h2>👋 歡迎來到數學世界</h2>
+            <p style="color: #636e72; margin-bottom: 25px; font-weight: bold;">請先使用學校 Google 帳戶登入</p>
+            <div id="google-btn-container" style="display: flex; justify-content: center; min-height: 40px;"></div>
+        </div>
+    </div>
+
+    <!-- 2. 主頁面 (模式選擇) -->
+    <div id="home-screen" class="screen">
+        <h2 style="font-size: 32px; color: #2d3436; font-weight: 900; text-shadow: 0 2px 5px rgba(0,0,0,0.05);">你想進行甚麼活動？</h2>
+        <div class="mode-container">
+            <!-- 練習模式 -->
+            <div class="mode-card-wrapper" onclick="openTopicScreen('practice')">
+                <div class="mode-card">
+                    <div class="icon">✏️</div>
+                    <div class="title">挑戰練習</div>
+                    <div class="subtitle">賺取分數與排名</div>
+                </div>
+            </div>
+            <!-- 學習重點模式 -->
+            <div class="mode-card-wrapper" onclick="openTopicScreen('learn')">
+                <div class="mode-card">
+                    <div class="icon">💡</div>
+                    <div class="title">學習重點</div>
+                    <div class="subtitle">複習筆記與影片</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. 內頁 (課題選擇) -->
+    <div id="topics-screen" class="screen">
+        <div class="topic-header">
+            <button class="back-btn" onclick="goBack()">◀ 返回主選單</button>
+            <h2 class="topic-title-text" id="dynamic-topic-title">請選擇課題</h2>
+            <div style="width: 110px;"></div> <!-- 排版平衡用 -->
+        </div>
+        
+        <div class="topics-grid" id="topics-container">
+            <!-- 課題方格將由 JavaScript 動態生成 -->
+        </div>
+    </div>
+
+    <script>
+        // 生成漂浮背景特效
+        const particles = ['✨', '⭐', '🫧', '➕', '➗', '📐'];
+        const bgContainer = document.getElementById('bg-particles');
+        for(let i=0; i<15; i++) {
+            let el = document.createElement('div');
+            el.className = 'particle';
+            el.innerText = particles[Math.floor(Math.random() * particles.length)];
+            el.style.left = Math.random() * 100 + 'vw';
+            el.style.animationDuration = (Math.random() * 10 + 10) + 's';
+            el.style.animationDelay = (Math.random() * 5) + 's';
+            el.style.fontSize = (Math.random() * 2 + 1.5) + 'rem';
+            bgContainer.appendChild(el);
+        }
+
+        // ==========================================
+        // 課題資料設定區 (方便日後修改與新增網址)
+        // ==========================================
+        const topicsData = [
+            { id: 1, unit: "四上單元一", name: "乘法", practiceUrl: "https://ltmps-chusiuhin.github.io/p4math1/", learnUrl: "" },
+            { id: 2, unit: "四上單元二", name: "除法", practiceUrl: "https://ltmps-chusiuhin.github.io/p4math2/", learnUrl: "" },
+            { id: 3, unit: "四上單元三", name: "四邊形", practiceUrl: "", learnUrl: "" },
+            { id: 4, unit: "四上單元四", name: "圖形分割和拼砌", practiceUrl: "", learnUrl: "" },
+            { id: 5, unit: "四上單元五", name: "一筆畫", practiceUrl: "", learnUrl: "" },
+            { id: 6, unit: "四上單元六", name: "倍數和因數", practiceUrl: "", learnUrl: "" },
+            { id: 7, unit: "四上單元七", name: "公因數和公倍數", practiceUrl: "", learnUrl: "" },
+            { id: 8, unit: "四上單元八", name: "八個主要方向", practiceUrl: "", learnUrl: "" }
+        ];
+
+        let currentMode = ''; 
+
+        // ==========================================
+        // Google 登入邏輯
+        // ==========================================
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                return JSON.parse(decodeURIComponent(window.atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')));
+            } catch (e) { return null; }
+        }
+
+        function handleCredentialResponse(response) {
+            const payload = parseJwt(response.credential);
+            if(payload) {
+                const lastName = payload.family_name || payload.name || "同學"; 
+                
+                const userInfo = document.getElementById('user-info');
+                userInfo.innerText = `👤 ${lastName}`;
+                userInfo.style.display = 'block';
+
+                showScreen('home-screen');
+            }
+        }
+
+        window.onload = function () {
+            // ⚠️ 這裡填寫你的 Google Client ID
+            google.accounts.id.initialize({
+                client_id: "573911894747-0c28hfr0bmkjnn8pkm2msg6sjal1thqe.apps.googleusercontent.com", 
+                callback: handleCredentialResponse
+            });
+            google.accounts.id.renderButton(
+                document.getElementById("google-btn-container"),
+                { theme: "outline", size: "large", shape: "pill", width: 250 }
+            );
+        };
+
+        // ==========================================
+        // 畫面切換與介面生成邏輯
+        // ==========================================
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function goBack() {
+            showScreen('home-screen');
+        }
+
+        function openTopicScreen(mode) {
+            currentMode = mode;
+            
+            const titleEl = document.getElementById('dynamic-topic-title');
+            if(mode === 'practice') {
+                titleEl.innerHTML = '✏️ 選擇練習課題';
+                titleEl.style.color = 'var(--accent-1)';
+            } else {
+                titleEl.innerHTML = '💡 選擇學習重點';
+                titleEl.style.color = 'var(--accent-2)';
+            }
+
+            renderTopics();
+            showScreen('topics-screen');
+        }
+
+        function renderTopics() {
+            const container = document.getElementById('topics-container');
+            container.innerHTML = ''; 
+
+            topicsData.forEach(topic => {
+                const targetUrl = currentMode === 'practice' ? topic.practiceUrl : topic.learnUrl;
+                const isAvailable = targetUrl !== "";
+                const modeClass = currentMode === 'practice' ? 'practice-mode' : 'learn-mode';
+                const btnText = isAvailable ? (currentMode === 'practice' ? '🚀 進入挑戰' : '📖 進入學習') : '🔒 準備中';
+
+                const card = document.createElement(isAvailable ? 'a' : 'div');
+                card.className = `topic-card ${isAvailable ? modeClass : 'disabled'}`;
+                
+                if (isAvailable) {
+                    card.href = targetUrl;
+                } else {
+                    card.onclick = () => alert("此單元內容即將推出，敬請期待！🚀");
+                }
+
+                card.innerHTML = `
+                    <div class="unit">${topic.unit}</div>
+                    <div class="name">${topic.name}</div>
+                    <div class="status">${btnText}</div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>
