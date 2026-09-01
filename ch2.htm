@@ -1,6 +1,21 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
+
+    <script>
+    // 在子頁面讀取剛才首頁存下的 user_token
+    const userToken = localStorage.getItem('user_token');
+
+    if (!userToken) {
+        // 如果沒有 token，代表未登入，跳回首頁
+        alert('請先登入帳戶！');
+        window.location.href = 'https://ltmps-chusiuhin.github.io/p4math/';
+    } else {
+        // 已登入，可順利瀏覽頁面
+        console.log("學生已通過身份驗證！");
+    }
+    </script>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>除法挑戰平台</title>
