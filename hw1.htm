@@ -69,7 +69,7 @@
         }
         .inline-input:focus { background: #eef2f3; border-bottom-width: 3px; }
         
-        /* 針對第10題較長的輸入框 */
+        /* 針對較長的輸入框 */
         .long-input { width: 120px; }
 
         /* 基本輸入列 (班別學號) */
@@ -323,7 +323,7 @@
             { id: 7, html: `99 &times; 99 <br>= ( <input class="inline-input" id="q7_1" autocomplete="off"> - 1) &times; 99 <br>= <input class="inline-input" id="q7_2" autocomplete="off"> - <input class="inline-input" id="q7_3" autocomplete="off"> <br>= <input class="inline-input" id="q7_4" autocomplete="off">` },
             { id: 8, html: `101 &times; 99 <br>= <input class="inline-input long-input" id="q8_1" autocomplete="off">` },
             { id: 9, html: `12 &times; 28 + 12 &times; 22 <br>= <input class="inline-input long-input" id="q9_1" autocomplete="off">` },
-            { id: 10, html: `13 &times; 24 + 14 &times; 24 + 23 &times; 24 <br>= <input class="inline-input long-input" id="q10_1" autocomplete="off" placeholder="例: 50x24"> <br>= <input class="inline-input long-input" id="q10_2" autocomplete="off">` }
+            { id: 10, html: `13 &times; 24 + 14 &times; 24 + 23 &times; 24 <br>= <input class="inline-input long-input" id="q10_1" autocomplete="off">` }
         ];
 
         function renderQuestions() {
@@ -343,11 +343,6 @@
         function getVal(id) {
             const el = document.getElementById(id);
             return el ? el.value.trim() : '';
-        }
-
-        // 標準化字串 (去空白、全轉小寫、統一乘號) 用於第10題
-        function normalizeExpr(str) {
-            return str.replace(/\s+/g, '').toLowerCase().replace(/[×*X]/g, 'x');
         }
 
         function submitHomework() {
@@ -394,9 +389,8 @@
             // Q9
             if (getVal('q9_1') === '600') score += pointsPerQ;
 
-            // Q10 (容許各種乘號格式 50x24)
-            let q10_expr = normalizeExpr(getVal('q10_1'));
-            if ((q10_expr === '50x24' || q10_expr === '24x50') && getVal('q10_2') === '1200') score += pointsPerQ;
+            // Q10
+            if (getVal('q10_1') === '1200') score += pointsPerQ;
 
             // 組合資料並上傳
             const data = {
