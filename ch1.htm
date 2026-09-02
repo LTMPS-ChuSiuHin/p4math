@@ -205,8 +205,11 @@
             <button class="btn" onclick="startGame('infinite')">♾️ 無限練習</button>
             <button class="btn" onclick="startGame('timed')">⏱️ 限時挑戰 (2分鐘)</button>
             <button class="btn rank-btn" onclick="startGame('ranked')">🏆 排名模式 (3分鐘/漸進難度)</button>
-            <div style="margin-top: 15px;">
+            
+            <!-- 加入返回主選單的按鈕區塊 -->
+            <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 5px;">
                 <button class="btn secondary" onclick="showLeaderboard()">📊 觀看英雄榜</button>
+                <button class="btn outline-btn" onclick="window.location.href='https://ltmps-chusiuhin.github.io/p4math/'" style="width: 100%;">🏠 返回綜合學習平台</button>
             </div>
         </div>
 
@@ -302,7 +305,7 @@
                 </table>
             </div>
             <br>
-            <button class="btn secondary" onclick="showScreen('menu-screen')">🏠 返回主選單</button>
+            <button class="btn secondary" onclick="showScreen('menu-screen')">🏠 返回選單</button>
         </div>
 
     </div>
