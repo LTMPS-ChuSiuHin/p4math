@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教學動畫：乘法</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #4a90e2;        /* 直式計算色系 */
+            --primary-hover: #357abd;
+            --trick-color: #9b59b6;    /* 速算技巧色系 */
+            --trick-hover: #8e44ad;
+            --prop-color: #f39c12;     /* 乘法性質色系 */
+            --prop-hover: #e67e22;
+            
+            --secondary: #00b894;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-main: #2d3436;
+            --text-muted: #636e72;
+            --highlight-bg: #ffeaa7;
+            --highlight-text: #d35400;
+            --carry-color: #e74c3c;
+        }
+
+        body {
+            font-family: 'Nunito', 'Segoe UI', Tahoma, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* 標題與導覽列 */
+        .header {
+            width: 100%; max-width: 1000px; text-align: center; margin-bottom: 20px;
+        }
+        .header h1 { color: var(--text-main); font-weight: 900; margin-bottom: 20px; }
+
+        .nav-tabs {
+            display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 30px;
+        }
+        .tab-btn {
+            background: #dfe6e9; color: var(--text-muted); border: none; padding: 12px 25px;
+            border-radius: 30px; font-size: 16px; font-weight: bold; cursor: pointer;
+            transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .tab-btn:hover { background: #b2bec3; color: var(--text-main); transform: translateY(-2px); }
+        
+        /* 各頁籤的專屬啟用顏色 */
+        .tab-btn.prop.active { background: var(--prop-color); color: white; box-shadow: 0 6px 12px rgba(243,156,18,0.3); }
+        .tab-btn.basic.active { background: var(--primary); color: white; box-shadow: 0 6px 12px rgba(74,144,226,0.3); }
+        .tab-btn.trick.active { background: var(--trick-color); color: white; box-shadow: 0 6px 12px rgba(155,89,182,0.3); }
+
+        /* 內容區塊控制 */
+        .section { display: none; width: 100%; max-width: 1000px; animation: fadeIn 0.4s ease; }
+        .section.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 教學互動區共通樣式 */
+        .tutorial-container {
+            display: flex; flex-direction: column; gap: 20px;
+            background: var(--card-bg); padding: 30px; border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+        @media(min-width: 768px) {
+            .tutorial-container { flex-direction: row; align-items: flex-start; }
+        }
+
+        /* 左側：算式與圖形展示區 */
+        .math-board {
+            flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: #f8f9fa; border-radius: 15px; padding: 30px; border: 2px dashed #dfe6e9;
+            min-height: 400px; position: relative;
+        }
+
+        /* 直式表格樣式 */
+        .math-table {
+            border-collapse: collapse; font-size: 36px; font-weight: bold;
+            font-family: 'Courier New', Courier, monospace; margin: auto;
+        }
+        .math-table td {
+            width: 50px; height: 50px; text-align: center; vertical-align: middle;
+            position: relative; transition: all 0.3s ease;
+        }
+
+        .math-cell { opacity: 0; transform: scale(0.8); }
+        .math-cell.show { opacity: 1; transform: scale(1); }
+        .math-cell.hl {
+            background-color: var(--highlight-bg); color: var(--highlight-text);
+            border-radius: 10px; transform: scale(1.15); box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            z-index: 5;
+        }
+        .math-line hr { border: none; border-top: 3px solid var(--text-main); margin: 0; opacity: 0; transition: 0.3s; }
+        .math-line.show hr { opacity: 1; }
+        .carry { font-size: 18px; color: var(--carry-color); position: absolute; bottom: 0; right: 5px; }
+        .carry.tens-c { bottom: 18px; color: #0984e3; }
+
+        /* 性質展示 (Bar Model) 樣式 */
+        .prop-formula {
+            font-size: 28px; font-weight: 900; color: var(--text-main); 
+            margin-bottom: 25px; text-align: center; padding: 10px 15px;
+            background: white; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .bar-container {
+            display: flex; flex-direction: column; gap: 20px; align-items: center; justify-content: center; width: 100%;
+        }
+        .bar-group-wrapper { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+        .bar-group {
+            display: flex; flex-direction: column; gap: 4px; padding: 10px;
+            background: white; border: 2px dashed #b2bec3; border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05); transition: 0.3s;
+        }
+        .bar-row { display: flex; gap: 4px; justify-content: center; }
+        .bar-block {
+            width: 25px; height: 25px; border-radius: 6px; display: flex; /* 縮小方格以容納最大 8x8 */
+            align-items: center; justify-content: center; color: transparent;
+            font-size: 0px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .block-c1 { background-color: var(--primary); }
+        .block-c2 { background-color: var(--secondary); }
+        .block-c3 { background-color: var(--trick-color); }
+
+        /* 右側：控制面板 */
+        .control-panel {
+            flex: 1.2; display: flex; flex-direction: column; justify-content: center;
+        }
+        
+        .settings-panel {
+            background: #fdfbfb; padding: 15px 20px; border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px;
+            display: flex; gap: 15px; align-items: center; flex-wrap: wrap;
+        }
+        .settings-panel select {
+            padding: 10px; border-radius: 10px; border: 2px solid var(--primary);
+            font-size: 16px; outline: none; font-weight: bold; color: var(--primary);
+        }
+        
+        .settings-panel.trick select { border-color: var(--trick-color); color: var(--trick-color); }
+        .settings-panel.prop select { border-color: var(--prop-color); color: var(--prop-color); }
+
+        .step-indicator {
+            background: #eef2f3; display: inline-block; padding: 5px 15px;
+            border-radius: 20px; font-size: 14px; font-weight: 800; margin-bottom: 15px; align-self: flex-start;
+        }
+        .step-indicator.basic { color: var(--primary); }
+        .step-indicator.trick { color: var(--trick-color); }
+        .step-indicator.prop { color: var(--prop-color); }
+
+        .step-title { font-size: 24px; font-weight: 900; margin: 0 0 10px 0; color: var(--text-main); }
+        .step-desc { font-size: 18px; line-height: 1.6; color: var(--text-muted); min-height: 120px; margin-bottom: 20px; }
+
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        
+        .action-btn {
+            padding: 12px 20px; border: none; border-radius: 12px; font-size: 16px;
+            font-weight: bold; cursor: pointer; transition: 0.2s; flex: 1;
+        }
+        .btn-prev { background: #dfe6e9; color: var(--text-main); }
+        .btn-prev:hover { background: #b2bec3; }
+        
+        /* 依模組改變主要按鈕顏色 */
+        .btn-next.basic { background: var(--primary); color: white; flex: 2; }
+        .btn-next.basic:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 4px 8px rgba(74,144,226,0.3); }
+        
+        .btn-next.trick { background: var(--trick-color); color: white; flex: 2; }
+        .btn-next.trick:hover { background: var(--trick-hover); transform: translateY(-2px); box-shadow: 0 4px 8px rgba(155,89,182,0.3); }
+
+        .btn-next.prop { background: var(--prop-color); color: white; flex: 2; }
+        .btn-next.prop:hover { background: var(--prop-hover); transform: translateY(-2px); box-shadow: 0 4px 8px rgba(243,156,18,0.3); }
+        
+        .btn-reset { background: #ff7675; color: white; width: 100%; margin-top: 10px; }
+        .btn-reset:hover { background: #d63031; }
+        
+        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>✨ 教學動畫：乘法</h1>
+        <div class="nav-tabs">
+            <button class="tab-btn prop active" onclick="switchTab('properties', this)">🧱 乘法的性質</button>
+            <button class="tab-btn basic" onclick="switchTab('step-tutorial', this)">📝 乘法直式計算步驟</button>
+            <button class="tab-btn trick" onclick="switchTab('tricks', this)">⚡ 乘法速算技巧</button>
+        </div>
+    </div>
+
+    <!-- 區塊 1：乘法的性質 (Bar Model) -->
+    <div id="properties" class="section active">
+        <div class="tutorial-container">
+            <div class="math-board" id="board-container-C">
+                <!-- 內容由 JS 注入 -->
+            </div>
+            <div class="control-panel">
+                <div class="settings-panel prop">
+                    <select id="prop-select" onchange="startNewProperty()">
+                        <option value="commutative">交換性質 (a × b = b × a)</option>
+                        <option value="associative">結合性質 (a × b) × c</option>
+                        <option value="distributive">分配性質 a × (b + c)</option>
+                    </select>
+                    <button class="action-btn" style="background: var(--prop-color); color: white; flex: none;" onclick="startNewProperty()">🎲 換個數字</button>
+                </div>
+                <div class="step-indicator prop" id="step-counter-C">步驟 0 / 0</div>
+                <h2 class="step-title" id="step-title-C">準備學習</h2>
+                <div class="step-desc" id="step-desc-C">點擊開始以查看乘法性質的圖像化說明。</div>
+                <div class="btn-group">
+                    <button class="action-btn btn-prev" id="btn-prev-C" onclick="changeStepC(-1)" disabled>◀ 上一步</button>
+                    <button class="action-btn btn-next prop" id="btn-next-C" onclick="changeStepC(1)">下一步 ▶</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 區塊 2：直式計算教學 -->
+    <div id="step-tutorial" class="section">
+        <div class="tutorial-container">
+            <div class="math-board" id="board-container-A"></div>
+            <div class="control-panel">
+                <div class="settings-panel">
+                    <select id="digit-select-A" onchange="startNewRandomA()">
+                        <option value="2">兩位數 × 兩位數</option>
+                        <option value="3" selected>三位數 × 兩位數</option>
+                    </select>
+                    <button class="action-btn" style="background: var(--primary); color: white; flex: none;" onclick="startNewRandomA()">🎲 隨機出題</button>
+                </div>
+                <div class="step-indicator basic" id="step-counter-A">步驟 0 / 0</div>
+                <h2 class="step-title" id="step-title-A">準備計算</h2>
+                <div class="step-desc" id="step-desc-A">點擊「開始教學」以查看運算步驟。</div>
+                <div class="btn-group">
+                    <button class="action-btn btn-prev" id="btn-prev-A" onclick="changeStepA(-1)" disabled>◀ 上一步</button>
+                    <button class="action-btn btn-next basic" id="btn-next-A" onclick="changeStepA(1)">開始教學 🚀</button>
+                </div>
+                <button class="action-btn btn-reset" onclick="resetTutorialA()">🔄 重播動畫</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 區塊 3：技巧 (交叉相乘法) -->
+    <div id="tricks" class="section">
+        <div class="tutorial-container">
+            <div class="math-board" id="board-container-B"></div>
+            <div class="control-panel">
+                <div class="settings-panel trick">
+                    <select id="digit-select-B" disabled>
+                        <option value="2">兩位數 × 兩位數 (交叉速算法)</option>
+                    </select>
+                    <button class="action-btn" style="background: var(--trick-color); color: white; flex: none;" onclick="startNewRandomB()">🎲 隨機出題</button>
+                </div>
+                <div class="step-indicator trick" id="step-counter-B">步驟 0 / 0</div>
+                <h2 class="step-title" id="step-title-B">準備計算</h2>
+                <div class="step-desc" id="step-desc-B">點擊「開始教學」以查看速算步驟。</div>
+                <div class="btn-group">
+                    <button class="action-btn btn-prev" id="btn-prev-B" onclick="changeStepB(-1)" disabled>◀ 上一步</button>
+                    <button class="action-btn btn-next trick" id="btn-next-B" onclick="changeStepB(1)">開始教學 🚀</button>
+                </div>
+                <button class="action-btn btn-reset" onclick="resetTutorialB()">🔄 重播動畫</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // =======================================
+        // 通用函式
+        // =======================================
+        function randomBetween(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+        function randomNonZeroDigit() {
+            return randomBetween(1, 9);
+        }
+
+        // =======================================
+        // 模組 C: 乘法的性質 (Bar Model)
+        // =======================================
+        let stepC = 0;
+        let animC = [];
+
+        // 建立單純矩陣的 Bar Model
+        function buildGridBlocks(rows, cols, colorClass) {
+            let html = '<div class="bar-group">';
+            for(let r=0; r<rows; r++){
+                html += '<div class="bar-row">';
+                for(let c=0; c<cols; c++) html += `<div class="bar-block ${colorClass}"></div>`;
+                html += '</div>';
+            }
+            html += '</div>';
+            return html;
+        }
+
+        // 建立混合顏色 (分配性質用) 的 Bar Model
+        function buildMixedBlocks(rows, cols1, cols2) {
+            let html = '<div class="bar-group">';
+            for(let r=0; r<rows; r++){
+                html += '<div class="bar-row">';
+                for(let c=0; c<cols1; c++) html += `<div class="bar-block block-c1"></div>`;
+                for(let c=0; c<cols2; c++) html += `<div class="bar-block block-c2"></div>`;
+                html += '</div>';
+            }
+            html += '</div>';
+            return html;
+        }
+
+        function startNewProperty() {
+            let type = document.getElementById('prop-select').value;
+            animC = [];
+            
+            if (type === 'commutative') {
+                // 交換性質: a x b = b x a (直接一頁展示)
+                let a = randomBetween(3, 8);
+                let b = randomBetween(3, 8);
+                while(a === b) b = randomBetween(3, 8); // 確保長寬不同才看得出變化
+
+                animC.push({
+                    title: "交換性質 (Commutative Property)",
+                    desc: `在乘法中，數字對調位置，總數量依然相同。<br><br>不論是 ${a} 排 ${b} 個，還是 ${b} 排 ${a} 個，總數都是 <b>${a*b}</b>。`,
+                    html: `<div class="prop-formula" style="color:var(--prop-color);">${a} × ${b} = ${b} × ${a} = ${a*b}</div>
+                           <div class="bar-container"><div class="bar-group-wrapper" style="align-items: center;">
+                               <div>
+                                   <div style="text-align:center; font-weight:bold; margin-bottom:10px; color:#636e72;">${a} 排，每排 ${b} 個</div>
+                                   ${buildGridBlocks(a, b, 'block-c1')}
+                               </div>
+                               <span style="font-size:40px; margin:auto 15px; color:#b2bec3;">=</span>
+                               <div>
+                                   <div style="text-align:center; font-weight:bold; margin-bottom:10px; color:#636e72;">${b} 排，每排 ${a} 個</div>
+                                   ${buildGridBlocks(b, a, 'block-c2')}
+                               </div>
+                           </div></div>`
+                });
+
+            } else if (type === 'associative') {
+                // 結合性質: (a x b) x c = a x (b x c) (直接一頁展示)
+                let a = randomBetween(2, 4);
+                let b = randomBetween(3, 5);
+                let c = randomBetween(2, 4);
+
+                animC.push({
+                    title: "結合性質 (Associative Property)",
+                    desc: `三個數字相乘，改變括號（先算的順序），總數量依然相同。<br><br>不論是 ${c} 組的 (${a} × ${b})，還是 ${a} 組的 (${b} × ${c})，總方塊數都是 <b>${a*b*c}</b>。`,
+                    html: `<div class="prop-formula" style="color:var(--prop-color);">(${a} × ${b}) × ${c} = ${a} × (${b} × ${c})</div>
+                           <div class="bar-container"><div class="bar-group-wrapper" style="align-items: center;">
+                               <div>
+                                   <div style="text-align:center; font-weight:bold; margin-bottom:10px; color:#636e72;">${c} 組 (${a} × ${b})</div>
+                                   <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">${Array(c).fill(buildGridBlocks(a, b, 'block-c1')).join('')}</div>
+                               </div>
+                               <span style="font-size:40px; margin:auto 15px; color:#b2bec3;">=</span>
+                               <div>
+                                   <div style="text-align:center; font-weight:bold; margin-bottom:10px; color:#636e72;">${a} 組 (${b} × ${c})</div>
+                                   <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">${Array(a).fill(buildGridBlocks(b, c, 'block-c2')).join('')}</div>
+                               </div>
+                           </div></div>`
+                });
+
+            } else if (type === 'distributive') {
+                // 分配性質: a x (b + c) = a x b + a x c
+                let a = randomBetween(3, 8);
+                let b = randomBetween(3, 6);
+                let c = randomBetween(2, 5);
+
+                animC.push({
+                    title: `1. 括號內的加法合併相乘`,
+                    desc: `我們來計算 <b>${a} × (${b} + ${c})</b>：<br>這表示有 <b>${a}</b> 排方塊，每排由 <b>${b}</b> 個藍色和 <b>${c}</b> 個綠色方塊組成。`,
+                    html: `<div class="prop-formula">${a} × (${b} + ${c})</div>
+                           <div class="bar-container">${buildMixedBlocks(a, b, c)}</div>`
+                });
+                animC.push({
+                    title: "2. 分配拆開",
+                    desc: `我們也可以把藍色和綠色分開：<br>也就是 <b>${a} × ${b}</b> 個藍色方塊，加上 <b>${a} × ${c}</b> 個綠色方塊。總數量完全相同！`,
+                    html: `<div class="prop-formula">${a} × ${b} + ${a} × ${c}</div>
+                           <div class="bar-container"><div class="bar-group-wrapper" style="align-items:center;">
+                           ${buildGridBlocks(a, b, 'block-c1')} <span style="font-size:40px; color:#b2bec3;">+</span> ${buildGridBlocks(a, c, 'block-c2')}
+                           </div></div>`
+                });
+                animC.push({
+                    title: "3. 結論",
+                    desc: `這就是<b>分配性質</b>：<br>括號外的乘數可以「分配」給括號內的每一個數字再相加。<br><br><b>a × (b + c) = a × b + a × c</b>`,
+                    html: `<div class="prop-formula" style="color:var(--prop-color);">${a} × (${b} + ${c}) = ${a} × ${b} + ${a} × ${c}</div>
+                           <div class="bar-container"><div class="bar-group-wrapper" style="align-items:center;">
+                           ${buildMixedBlocks(a, b, c)}
+                           <span style="font-size:30px; margin:0 10px; color:#b2bec3;">=</span>
+                           ${buildGridBlocks(a, b, 'block-c1')} <span style="font-size:30px; color:#b2bec3;">+</span> ${buildGridBlocks(a, c, 'block-c2')}
+                           </div></div>`
+                });
+            }
+
+            stepC = 0;
+            updateViewC();
+        }
+
+        function updateViewC() {
+            const data = animC[stepC];
+            document.getElementById('step-counter-C').innerText = `步驟 ${stepC + 1} / ${animC.length}`;
+            document.getElementById('step-title-C').innerText = data.title;
+            document.getElementById('step-desc-C').innerHTML = data.desc;
+            document.getElementById('board-container-C').innerHTML = data.html;
+
+            document.getElementById('btn-prev-C').disabled = stepC === 0;
+            const nextBtn = document.getElementById('btn-next-C');
+            
+            if (animC.length === 1) {
+                // 如果只有一頁（交換、結合性質）
+                document.getElementById('btn-prev-C').style.display = 'none';
+                nextBtn.disabled = true; 
+                nextBtn.innerText = "展示完畢 🎉"; 
+            } else {
+                document.getElementById('btn-prev-C').style.display = 'block';
+                if (stepC === animC.length - 1) { 
+                    nextBtn.disabled = true; 
+                    nextBtn.innerText = "教學完成 🎉"; 
+                } else { 
+                    nextBtn.disabled = false; 
+                    nextBtn.innerText = "下一步 ▶"; 
+                }
+            }
+        }
+
+        function changeStepC(dir) { stepC = Math.max(0, Math.min(stepC + dir, animC.length - 1)); updateViewC(); }
+
+
+        // =======================================
+        // 模組 A: 直式計算步驟
+        // =======================================
+        let stepA = 0;
+        let animA = [];
+        let allIdsA = ['op_mul_a', 'line1_a', 'line2_a'];
+        for(let i=0; i<6; i++) {
+            allIdsA.push(`n1_a_${i}`, `n2_a_${i}`, `p1_a_${i}`, `p2_a_${i}`, `s_a_${i}`, `c_t_a_${i}`, `c_o_a_${i}`);
+        }
+
+        function startNewRandomA() {
+            let digits = parseInt(document.getElementById('digit-select-A').value);
+            let n1 = digits === 2 ? (randomNonZeroDigit() * 10 + randomNonZeroDigit()) : (randomNonZeroDigit() * 100 + randomNonZeroDigit() * 10 + randomNonZeroDigit());
+            let n2 = randomNonZeroDigit() * 10 + randomNonZeroDigit();
+            buildMathBoardA(n1, n2);
+            buildAnimationStepsA(n1, n2);
+            stepA = 0;
+            updateViewA();
+        }
+
+        function buildMathBoardA(n1, n2) {
+            let html = '<table class="math-table">';
+            html += '<tr>' + [5,4,3,2,1,0].map(i => `<td class="math-cell carry tens-c" id="c_t_a_${i}"></td>`).join('') + '</tr>';
+            html += '<tr>' + [5,4,3,2,1,0].map(i => `<td class="math-cell carry ones-c" id="c_o_a_${i}"></td>`).join('') + '</tr>';
+            html += '<tr>' + [5,4,3,2,1,0].map(i => `<td class="math-cell" id="n1_a_${i}"></td>`).join('') + '</tr>';
+            html += '<tr>' + [5,4,3,2,1,0].map(i => `<td class="math-cell" id="n2_a_${i}"></td>`).join('') + '</tr>';
+            html += '<tr><td colspan="6" class="math-line" id="line1_a"><hr></td></tr>';
+            html += '<tr>' + [5,4,3,2,1,0].map(i => `<td class="math-cell" id="p1_a_${i}"></td>`).join('') + '</tr>';
+            html += '<tr>' + [5,4,3,2,1,0].map(i => `<td class="math-cell" id="p2_a_${i}"></td>`).join('') + '</tr>';
+            html += '<tr><td colspan="6" class="math-line" id="line2_a"><hr></td></tr>';
+            html += '<tr>' + [5,4,3,2,1,0].map(i => `<td class="math-cell" id="s_a_${i}"></td>`).join('') + '</tr>';
+            html += '</table>';
+            document.getElementById('board-container-A').innerHTML = html;
+            
+            let m1_str = n1.toString().split('').reverse();
+            let m2_str = n2.toString().split('').reverse();
+
+            for(let i=0; i<m1_str.length; i++) document.getElementById(`n1_a_${i}`).innerText = m1_str[i];
+            for(let i=0; i<m2_str.length; i++) document.getElementById(`n2_a_${i}`).innerText = m2_str[i];
+            document.getElementById(`n2_a_${m1_str.length}`).innerText = '×';
+            document.getElementById(`n2_a_${m1_str.length}`).id = 'op_mul_a'; 
+
+            let p1_str = (n1 * parseInt(m2_str[1]) + "0").split('').reverse();
+            for(let i=0; i<p1_str.length; i++) {
+                let el = document.getElementById(`p1_a_${i}`);
+                if (el) { el.innerText = p1_str[i]; if(i === 0) el.style.color = "var(--primary)"; }
+            }
+
+            let p2_str = (n1 * parseInt(m2_str[0])).toString().split('').reverse();
+            for(let i=0; i<p2_str.length; i++) { let el = document.getElementById(`p2_a_${i}`); if (el) el.innerText = p2_str[i]; }
+
+            let sum_str = (n1 * n2).toString().split('').reverse();
+            for(let i=0; i<sum_str.length; i++) { let el = document.getElementById(`s_a_${i}`); if (el) el.innerText = sum_str[i]; }
+
+            let carry = 0;
+            for(let i=0; i<m1_str.length; i++) {
+                carry = Math.floor((parseInt(m2_str[1]) * parseInt(m1_str[i]) + carry) / 10);
+                if (carry > 0) document.getElementById(`c_t_a_${i+1}`).innerText = carry;
+            }
+            carry = 0;
+            for(let i=0; i<m1_str.length; i++) {
+                carry = Math.floor((parseInt(m2_str[0]) * parseInt(m1_str[i]) + carry) / 10);
+                if (carry > 0) document.getElementById(`c_o_a_${i+1}`).innerText = carry;
+            }
+        }
+
+        function buildAnimationStepsA(n1, n2) {
+            animA = [];
+            let currentShow = ['op_mul_a'];
+            let m1_str = n1.toString().split('').reverse();
+            let m2_str = n2.toString().split('').reverse();
+
+            for(let i=0; i<m1_str.length; i++) currentShow.push(`n1_a_${i}`);
+            for(let i=0; i<m2_str.length; i++) currentShow.push(`n2_a_${i}`);
+            animA.push({ title: "準備計算", desc: `計算 <b>${n1} × ${n2}</b>。<br><br>點擊「下一步」開始。`, show: [...currentShow], hl: [] });
+
+            currentShow.push('line1_a');
+            animA.push({ title: "1. 寫成直式並對齊", desc: "確保相同的位值對齊，畫上橫線。", show: [...currentShow], hl: currentShow.filter(id => id.startsWith('n')) });
+
+            currentShow.push('p1_a_0');
+            animA.push({ title: "2. 先乘十位 (補零)", desc: `先用十位的 <b>${m2_str[1]}</b> 相乘。<br>因為代表乘 <b>${m2_str[1]}0</b>，先在個位補 <b>0</b>。`, show: [...currentShow], hl: ['n2_a_1', 'p1_a_0'] });
+
+            let carry = 0;
+            for(let i=0; i<m1_str.length; i++) {
+                let prod = parseInt(m2_str[1]) * parseInt(m1_str[i]);
+                let total = prod + carry, digit = total % 10, oldCarry = carry;
+                carry = Math.floor(total / 10);
+                currentShow.push(`p1_a_${i+1}`);
+                let hl = ['n2_a_1', `n1_a_${i}`, `p1_a_${i+1}`];
+                if (carry > 0) { currentShow.push(`c_t_a_${i+1}`); hl.push(`c_t_a_${i+1}`); }
+                animA.push({
+                    title: `十位乘法 (${i+1})`,
+                    desc: `<b>${m2_str[1]} × ${m1_str[i]} = ${prod}</b>。${oldCarry > 0 ? `<br>加進位 ${oldCarry} = <b>${total}</b>。` : ``}<br>寫下 <b>${digit}</b>${carry > 0 ? `，進位 <b>${carry}</b>` : `，不進位`}。`,
+                    show: [...currentShow], hl: hl
+                });
+            }
+            if (carry > 0) {
+                currentShow.push(`p1_a_${m1_str.length + 1}`);
+                animA.push({ title: `十位乘法 (進位)`, desc: `將進位 <b>${carry}</b> 寫下。十位完成！`, show: [...currentShow], hl: ['n2_a_1', `c_t_a_${m1_str.length}`, `p1_a_${m1_str.length + 1}`] });
+            }
+
+            carry = 0;
+            for(let i=0; i<m1_str.length; i++) {
+                let prod = parseInt(m2_str[0]) * parseInt(m1_str[i]);
+                let total = prod + carry, digit = total % 10, oldCarry = carry;
+                carry = Math.floor(total / 10);
+                currentShow.push(`p2_a_${i}`);
+                let hl = ['n2_a_0', `n1_a_${i}`, `p2_a_${i}`];
+                if (carry > 0) { currentShow.push(`c_o_a_${i+1}`); hl.push(`c_o_a_${i+1}`); }
+                animA.push({
+                    title: i === 0 ? "3. 再乘個位" : `個位乘法 (${i+1})`,
+                    desc: `${i===0?`接著輪到個位的 <b>${m2_str[0]}</b>。<br>`:''}<b>${m2_str[0]} × ${m1_str[i]} = ${prod}</b>。${oldCarry > 0 ? `<br>加進位 ${oldCarry} = <b>${total}</b>。` : ``}<br>寫下 <b>${digit}</b>${carry > 0 ? `，進位 <b>${carry}</b>` : `，不進位`}。`,
+                    show: [...currentShow], hl: hl
+                });
+            }
+            if (carry > 0) {
+                currentShow.push(`p2_a_${m1_str.length}`);
+                animA.push({ title: `個位乘法 (進位)`, desc: `將進位 <b>${carry}</b> 寫下。個位完成！`, show: [...currentShow], hl: ['n2_a_0', `c_o_a_${m1_str.length}`, `p2_a_${m1_str.length}`] });
+            }
+
+            currentShow.push('line2_a');
+            let sum_str = (n1 * n2).toString().split('').reverse();
+            for(let i=0; i<sum_str.length; i++) currentShow.push(`s_a_${i}`);
+            
+            let hl_sum = sum_str.map((_, i) => `s_a_${i}`);
+            let sum_p1 = n1 * parseInt(m2_str[1]) * 10, sum_p2 = n1 * parseInt(m2_str[0]);
+            animA.push({ title: "4. 兩行答案相加", desc: `將兩次乘法得到的積加起來。<br><b>${sum_p1} + ${sum_p2} = ${n1 * n2}</b>。`, show: [...currentShow], hl: hl_sum });
+        }
+
+        function updateViewA() {
+            const stepData = animA[stepA];
+            document.getElementById('step-counter-A').innerText = `步驟 ${stepA} / ${animA.length - 1}`;
+            document.getElementById('step-title-A').innerText = stepData.title;
+            document.getElementById('step-desc-A').innerHTML = stepData.desc;
+
+            document.getElementById('btn-prev-A').disabled = stepA === 0;
+            const nextBtn = document.getElementById('btn-next-A');
+            if (stepA === animA.length - 1) { nextBtn.disabled = true; nextBtn.innerText = "教學完成 🎉"; } 
+            else { nextBtn.disabled = false; nextBtn.innerText = stepA === 0 ? "開始教學 🚀" : "下一步 ▶"; }
+
+            allIdsA.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                if (stepData.show.includes(id)) el.classList.add('show'); else el.classList.remove('show');
+                if (stepData.hl.includes(id) && !id.includes('line')) el.classList.add('hl'); else el.classList.remove('hl');
+            });
+        }
+
+        function changeStepA(dir) { stepA = Math.max(0, Math.min(stepA + dir, animA.length - 1)); updateViewA(); }
+        function resetTutorialA() { stepA = 0; updateViewA(); }
+
+
+        // =======================================
+        // 模組 B: 乘法速算技巧 (Trick Tutorial)
+        // =======================================
+        let stepB = 0;
+        let animB = [];
+        let allIdsB = ['op_mul_b', 'line1_b', 'line2_b'];
+        for(let i=0; i<4; i++) {
+            allIdsB.push(`n1_b_${i}`, `n2_b_${i}`, `r1_b_${i}`, `r2_b_${i}`, `r3_b_${i}`, `s_b_${i}`);
+        }
+
+        function startNewRandomB() {
+            let n1 = randomNonZeroDigit() * 10 + randomNonZeroDigit(); // 11-99
+            let n2 = randomNonZeroDigit() * 10 + randomNonZeroDigit(); // 11-99
+            buildMathBoardB(n1, n2);
+            buildAnimationStepsB(n1, n2);
+            stepB = 0;
+            updateViewB();
+        }
+
+        function buildMathBoardB(n1, n2) {
+            let html = '<table class="math-table">';
+            html += '<tr><td></td><td></td><td class="math-cell" id="n1_b_1"></td><td class="math-cell" id="n1_b_0"></td></tr>';
+            html += '<tr><td></td><td class="math-cell" id="op_mul_b">×</td><td class="math-cell" id="n2_b_1"></td><td class="math-cell" id="n2_b_0"></td></tr>';
+            html += '<tr><td colspan="4" class="math-line" id="line1_b"><hr></td></tr>';
+            html += '<tr>' + [3,2,1,0].map(i => `<td class="math-cell" id="r1_b_${i}"></td>`).join('') + '</tr>';
+            html += '<tr>' + [3,2,1].map(i => `<td class="math-cell" id="r2_b_${i}"></td>`).join('') + '<td></td></tr>';
+            html += '<tr>' + [3,2,1].map(i => `<td class="math-cell" id="r3_b_${i}"></td>`).join('') + '<td></td></tr>';
+            html += '<tr><td colspan="4" class="math-line" id="line2_b"><hr></td></tr>';
+            html += '<tr>' + [3,2,1,0].map(i => `<td class="math-cell" id="s_b_${i}"></td>`).join('') + '</tr>';
+            html += '</table>';
+            document.getElementById('board-container-B').innerHTML = html;
+
+            let a = Math.floor(n1 / 10), b = n1 % 10;
+            let c = Math.floor(n2 / 10), d = n2 % 10;
+
+            document.getElementById('n1_b_1').innerText = a; document.getElementById('n1_b_0').innerText = b;
+            document.getElementById('n2_b_1').innerText = c; document.getElementById('n2_b_0').innerText = d;
+
+            let bd_pad = (b * d < 10) ? '0' + (b * d) : (b * d).toString();
+            let r1_str = ((a * c).toString() + bd_pad).split('').reverse();
+            for(let i=0; i<r1_str.length; i++) { let el = document.getElementById(`r1_b_${i}`); if(el) el.innerText = r1_str[i]; }
+
+            let r2_str = (a * d).toString().split('').reverse();
+            for(let i=0; i<r2_str.length; i++) { let el = document.getElementById(`r2_b_${i+1}`); if(el) el.innerText = r2_str[i]; }
+
+            let r3_str = (b * c).toString().split('').reverse();
+            for(let i=0; i<r3_str.length; i++) { let el = document.getElementById(`r3_b_${i+1}`); if(el) el.innerText = r3_str[i]; }
+
+            let s_str = (n1 * n2).toString().split('').reverse();
+            for(let i=0; i<s_str.length; i++) { let el = document.getElementById(`s_b_${i}`); if(el) el.innerText = s_str[i]; }
+        }
+
+        function buildAnimationStepsB(n1, n2) {
+            animB = [];
+            let a = Math.floor(n1 / 10), b = n1 % 10;
+            let c = Math.floor(n2 / 10), d = n2 % 10;
+            let bd_pad = (b * d < 10) ? '0' + (b * d) : (b * d).toString();
+            let ac_str = (a * c).toString();
+            let r1_len = ac_str.length + 2; 
+            let r2_len = (a * d).toString().length;
+            let r3_len = (b * c).toString().length;
+            let s_len = (n1 * n2).toString().length;
+
+            let currentShow = ['op_mul_b', 'n1_b_1', 'n1_b_0', 'n2_b_1', 'n2_b_0'];
+            animB.push({ title: "準備計算", desc: `使用「交叉相乘法」速算 <b>${n1} × ${n2}</b>。<br><br>點擊「下一步」開始。`, show: [...currentShow], hl: [] });
+
+            currentShow.push('line1_b');
+            
+            // 步驟 1: 個位乘個位
+            let bd_indices = ['r1_b_1', 'r1_b_0'];
+            currentShow.push(...bd_indices);
+            animB.push({
+                title: "1. 個位相乘",
+                desc: `先將上方個位與下方個位相乘。<br><b>${b} × ${d} = ${b*d}</b><br><br>寫在第一行的後方。<br>⚠️ 注意：若乘積為個位數，需在前方補 0 (例如寫成 0${b*d})。`,
+                show: [...currentShow], hl: ['n1_b_0', 'n2_b_0', ...bd_indices]
+            });
+
+            // 步驟 2: 十位乘十位
+            let ac_indices = [];
+            for(let i=2; i<r1_len; i++) {
+                currentShow.push(`r1_b_${i}`);
+                ac_indices.push(`r1_b_${i}`);
+            }
+            animB.push({
+                title: "2. 十位相乘",
+                desc: `接著將上方十位與下方十位相乘。<br><b>${a} × ${c} = ${a*c}</b><br><br>直接接在剛剛數字的前方。`,
+                show: [...currentShow], hl: ['n1_b_1', 'n2_b_1', ...ac_indices]
+            });
+
+            // 步驟 3: 交叉相乘 1
+            for(let i=0; i<r2_len; i++) currentShow.push(`r2_b_${i+1}`);
+            animB.push({
+                title: "3. 交叉相乘 (左上×右下)",
+                desc: `將上方十位與下方個位交叉相乘。<br><b>${a} × ${d} = ${a*d}</b><br><br>寫在第二行，並<b>向左移一位</b> (因為這是十位數)。`,
+                show: [...currentShow], hl: ['n1_b_1', 'n2_b_0', ...Array.from({length:r2_len},(_,i)=>`r2_b_${i+1}`)]
+            });
+
+            // 步驟 4: 交叉相乘 2
+            for(let i=0; i<r3_len; i++) currentShow.push(`r3_b_${i+1}`);
+            animB.push({
+                title: "4. 交叉相乘 (右上×左下)",
+                desc: `將上方個位與下方十位交叉相乘。<br><b>${b} × ${c} = ${b*c}</b><br><br>寫在第三行，同樣<b>向左移一位</b>對齊。`,
+                show: [...currentShow], hl: ['n1_b_0', 'n2_b_1', ...Array.from({length:r3_len},(_,i)=>`r3_b_${i+1}`)]
+            });
+
+            // 步驟 5: 加總
+            currentShow.push('line2_b');
+            for(let i=0; i<s_len; i++) currentShow.push(`s_b_${i}`);
+            let sum1 = parseInt((a * c).toString() + bd_pad);
+            let sum2 = (a * d) * 10, sum3 = (b * c) * 10;
+            
+            animB.push({
+                title: "5. 三行相加",
+                desc: `最後將上面三行數字直接相加，即可得到答案！<br><br><b>${sum1} + ${sum2} + ${sum3} = ${n1 * n2}</b>。`,
+                show: [...currentShow], hl: [...Array.from({length:r1_len},(_,i)=>`r1_b_${i}`), ...Array.from({length:r2_len},(_,i)=>`r2_b_${i+1}`), ...Array.from({length:r3_len},(_,i)=>`r3_b_${i+1}`), ...Array.from({length:s_len},(_,i)=>`s_b_${i}`)]
+            });
+        }
+
+        function updateViewB() {
+            const stepData = animB[stepB];
+            document.getElementById('step-counter-B').innerText = `步驟 ${stepB} / ${animB.length - 1}`;
+            document.getElementById('step-title-B').innerText = stepData.title;
+            document.getElementById('step-desc-B').innerHTML = stepData.desc;
+
+            document.getElementById('btn-prev-B').disabled = stepB === 0;
+            const nextBtn = document.getElementById('btn-next-B');
+            if (stepB === animB.length - 1) { nextBtn.disabled = true; nextBtn.innerText = "教學完成 🎉"; } 
+            else { nextBtn.disabled = false; nextBtn.innerText = stepB === 0 ? "開始教學 🚀" : "下一步 ▶"; }
+
+            allIdsB.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                if (stepData.show.includes(id)) el.classList.add('show'); else el.classList.remove('show');
+                if (stepData.hl.includes(id) && !id.includes('line')) el.classList.add('hl'); else el.classList.remove('hl');
+            });
+        }
+
+        function changeStepB(dir) { stepB = Math.max(0, Math.min(stepB + dir, animB.length - 1)); updateViewB(); }
+        function resetTutorialB() { stepB = 0; updateViewB(); }
+
+        // 載入時預設生成各題型
+        window.onload = () => {
+            startNewProperty();
+            startNewRandomA();
+            startNewRandomB();
+        };
+    </script>
+</body>
+</html>
