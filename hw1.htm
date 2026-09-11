@@ -314,7 +314,7 @@
     <script>
         // 題目定義區
         const questions = [
-            { id: 1, html: `30 &times; 8 + 70 &times; 8 <br>= <input class="inline-input" id="q1_1" autocomplete="off"> &times; 8 <br>= <input class="inline-input" id="q1_2" autocomplete="off">` },
+            { id: 1, html: `30 &times; 8 + 70 &times; 8 <br>= 100 &times; <input class="inline-input" id="q1_1" autocomplete="off">  <br>= <input class="inline-input" id="q1_2" autocomplete="off">` },
             { id: 2, html: `38 &times; 9 - 38 &times; 8 <br>= 38 &times; ( <input class="inline-input" id="q2_1" autocomplete="off"> - <input class="inline-input" id="q2_2" autocomplete="off"> ) <br>= 38 &times; <input class="inline-input" id="q2_3" autocomplete="off"> <br>= <input class="inline-input" id="q2_4" autocomplete="off">` },
             { id: 3, html: `18 &times; 19 <br>= <input class="inline-input" id="q3_1" autocomplete="off"> &times; (20 - <input class="inline-input" id="q3_2" autocomplete="off">) <br>= <input class="inline-input" id="q3_3" autocomplete="off"> &times; 20 - <input class="inline-input" id="q3_4" autocomplete="off"> &times; <input class="inline-input" id="q3_5" autocomplete="off"> <br>= <input class="inline-input" id="q3_6" autocomplete="off">` },
             { id: 4, html: `24 &times; 9 + 26 &times; 9 <br>= ( <input class="inline-input" id="q4_1" autocomplete="off"> + <input class="inline-input" id="q4_2" autocomplete="off"> ) &times; 9 <br>= <input class="inline-input" id="q4_3" autocomplete="off"> &times; 9 <br>= <input class="inline-input" id="q4_4" autocomplete="off">` },
@@ -362,7 +362,7 @@
 
             // 批改邏輯
             // Q1
-            if (getVal('q1_1') === '100' && getVal('q1_2') === '800') score += pointsPerQ;
+            if (getVal('q1_1') === '8' && getVal('q1_2') === '800') score += pointsPerQ;
             
             // Q2
             if (getVal('q2_1') === '9' && getVal('q2_2') === '8' && getVal('q2_3') === '1' && getVal('q2_4') === '38') score += pointsPerQ;
