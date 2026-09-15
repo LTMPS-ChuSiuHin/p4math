@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教學動畫：除法與整除性</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #8e44ad;        /* 直式計算色系 */
+            --primary-hover: #9b59b6;
+            --prop-color: #f39c12;     /* 整除性色系 */
+            --prop-hover: #e67e22;
+            
+            --secondary: #1abc9c;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-main: #2d3436;
+            --text-muted: #636e72;
+            --highlight-bg: #ffeaa7;
+            --highlight-text: #d35400;
+            --carry-color: #e74c3c;
+        }
+
+        body {
+            font-family: 'Nunito', 'Segoe UI', Tahoma, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* 標題與導覽列 */
+        .header {
+            width: 100%; max-width: 1000px; text-align: center; margin-bottom: 20px;
+        }
+        .header h1 { color: var(--text-main); font-weight: 900; margin-bottom: 20px; }
+
+        .nav-tabs {
+            display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 30px;
+        }
+        .tab-btn {
+            background: #dfe6e9; color: var(--text-muted); border: none; padding: 12px 25px;
+            border-radius: 30px; font-size: 16px; font-weight: bold; cursor: pointer;
+            transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .tab-btn:hover { background: #b2bec3; color: var(--text-main); transform: translateY(-2px); }
+        
+        .tab-btn.basic.active { background: var(--primary); color: white; box-shadow: 0 6px 12px rgba(142,68,173,0.3); }
+        .tab-btn.prop.active { background: var(--prop-color); color: white; box-shadow: 0 6px 12px rgba(243,156,18,0.3); }
+
+        /* 內容區塊控制 */
+        .section { display: none; width: 100%; max-width: 1000px; animation: fadeIn 0.4s ease; }
+        .section.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 教學互動區共通樣式 */
+        .tutorial-container {
+            display: flex; flex-direction: column; gap: 20px;
+            background: var(--card-bg); padding: 30px; border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+        @media(min-width: 768px) {
+            .tutorial-container { flex-direction: row; align-items: flex-start; }
+        }
+
+        /* 左側：算式與圖形展示區 */
+        .math-board {
+            flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: #f8f9fa; border-radius: 15px; padding: 25px; border: 2px dashed #dfe6e9;
+            min-height: 420px; position: relative; overflow-x: auto;
+        }
+
+        /* 直式表格樣式 (動態除法用) */
+        .math-table {
+            border-collapse: collapse; font-size: 36px; font-weight: bold;
+            font-family: 'Courier New', Courier, monospace; margin: auto;
+        }
+        .math-table td {
+            width: 45px; height: 45px; text-align: center; vertical-align: middle;
+            position: relative; transition: all 0.3s ease;
+        }
+
+        .math-cell { opacity: 0; transform: scale(0.8); }
+        .math-cell.show { opacity: 1; transform: scale(1); }
+        .math-cell.hl {
+            background-color: var(--highlight-bg); color: var(--highlight-text);
+            border-radius: 10px; transform: scale(1.15); box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            z-index: 5;
+        }
+
+        /* 累積算式區塊樣式 (整除性用) */
+        .prop-formula {
+            font-size: 24px; font-weight: 900; color: var(--text-main); 
+            margin-bottom: 12px; text-align: center; padding: 10px 15px;
+            background: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            line-height: 1.4; width: 100%; max-width: 450px;
+        }
+
+        /* 右側：控制面板 */
+        .control-panel {
+            flex: 1.2; display: flex; flex-direction: column; justify-content: center;
+        }
+        
+        .settings-panel {
+            background: #fdfbfb; padding: 15px 20px; border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px;
+            display: flex; gap: 15px; align-items: center; flex-wrap: wrap;
+        }
+        .settings-panel select {
+            padding: 10px; border-radius: 10px; border: 2px solid var(--primary);
+            font-size: 16px; outline: none; font-weight: bold; color: var(--primary); flex: 1;
+        }
+        
+        .settings-panel.prop select { border-color: var(--prop-color); color: var(--prop-color); }
+
+        .step-indicator {
+            background: #eef2f3; display: inline-block; padding: 5px 15px;
+            border-radius: 20px; font-size: 14px; font-weight: 800; margin-bottom: 15px; align-self: flex-start;
+        }
+        .step-indicator.basic { color: var(--primary); }
+        .step-indicator.prop { color: var(--prop-color); }
+
+        .step-title { font-size: 24px; font-weight: 900; margin: 0 0 10px 0; color: var(--text-main); }
+        .step-desc { font-size: 18px; line-height: 1.6; color: var(--text-muted); min-height: 120px; margin-bottom: 20px; }
+
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        
+        .action-btn {
+            padding: 12px 20px; border: none; border-radius: 12px; font-size: 16px;
+            font-weight: bold; cursor: pointer; transition: 0.2s; flex: 1; text-align: center;
+        }
+        .btn-prev { background: #dfe6e9; color: var(--text-main); }
+        .btn-prev:hover { background: #b2bec3; }
+        
+        .btn-next.basic { background: var(--primary); color: white; flex: 2; }
+        .btn-next.basic:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 4px 8px rgba(142,68,173,0.3); }
+
+        .btn-next.prop { background: var(--prop-color); color: white; flex: 2; }
+        .btn-next.prop:hover { background: var(--prop-hover); transform: translateY(-2px); box-shadow: 0 4px 8px rgba(243,156,18,0.3); }
+        
+        .btn-reset { background: #ff7675; color: white; width: 100%; margin-top: 10px; }
+        .btn-reset:hover { background: #d63031; }
+        
+        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>✨ 教學動畫：除法</h1>
+        <div class="nav-tabs">
+            <button class="tab-btn basic active" onclick="switchTab('step-tutorial', this)">📝 除法直式計算步驟</button>
+            <button class="tab-btn prop" onclick="switchTab('divisibility', this)">🧩 整除性規則</button>
+        </div>
+    </div>
+
+    <!-- 區塊 1：直式計算教學 -->
+    <div id="step-tutorial" class="section active">
+        <div class="tutorial-container">
+            <div class="math-board" id="board-container-A"></div>
+            <div class="control-panel">
+                <div class="settings-panel">
+                    <select id="digit-select-A" onchange="startNewRandomA()">
+                        <option value="2">兩位數 ÷ 兩位數</option>
+                        <option value="3" selected>三位數 ÷ 兩位數</option>
+                    </select>
+                    <button class="action-btn" style="background: var(--primary); color: white; flex: none;" onclick="startNewRandomA()">🎲 隨機出題</button>
+                </div>
+                <div class="step-indicator basic" id="step-counter-A">步驟 0 / 0</div>
+                <h2 class="step-title" id="step-title-A">準備計算</h2>
+                <div class="step-desc" id="step-desc-A">點擊「開始教學」以查看除法直式步驟。</div>
+                <div class="btn-group">
+                    <button class="action-btn btn-prev" id="btn-prev-A" onclick="changeStepA(-1)" disabled>◀ 上一步</button>
+                    <button class="action-btn btn-next basic" id="btn-next-A" onclick="changeStepA(1)">開始教學 🚀</button>
+                </div>
+                <button class="action-btn btn-reset" onclick="resetTutorialA()">🔄 重播動畫</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 區塊 2：整除性規則 -->
+    <div id="divisibility" class="section">
+        <div class="tutorial-container">
+            <div class="math-board" id="board-container-B" style="align-items: center; justify-content: center;"></div>
+            <div class="control-panel">
+                <div class="settings-panel prop">
+                    <select id="rule-select" onchange="startNewDivisibility()">
+                        <option value="2">能不能被 2 整除？</option>
+                        <option value="3">能不能被 3 整除？</option>
+                        <option value="4">能不能被 4 整除？</option>
+                        <option value="5">能不能被 5 整除？</option>
+                        <option value="6">能不能被 6 整除？</option>
+                        <option value="8">能不能被 8 整除？</option>
+                        <option value="9">能不能被 9 整除？</option>
+                        <option value="10">能不能被 10 整除？</option>
+                    </select>
+                    <button class="action-btn" style="background: var(--prop-color); color: white; flex: none;" onclick="startNewDivisibility()">🎲 隨機數字</button>
+                </div>
+                <div class="step-indicator prop" id="step-counter-B">步驟 0 / 0</div>
+                <h2 class="step-title" id="step-title-B">準備判斷</h2>
+                <div class="step-desc" id="step-desc-B">點擊「開始判斷」學習整除的特徵。</div>
+                <div class="btn-group">
+                    <button class="action-btn btn-prev" id="btn-prev-B" onclick="changeStepB(-1)" disabled>◀ 上一步</button>
+                    <button class="action-btn btn-next prop" id="btn-next-B" onclick="changeStepB(1)">開始判斷 🚀</button>
+                </div>
+                <button class="action-btn btn-reset" onclick="resetTutorialB()">🔄 重播動畫</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function randomBetween(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+        // =======================================
+        // 模組 A: 除法直式計算步驟 (動態矩陣生成)
+        // =======================================
+        let stepA = 0;
+        let animA = [];
+        
+        // 矩陣儲存庫
+        function setCell(r, c, val) {
+            let el = document.getElementById(`r${r}c${c}`);
+            if(el) { el.innerHTML = val; }
+        }
+
+        // 把數字拆成單一字元，放入指定結尾欄位的格子內
+        function placeNumber(r, endCol, num) {
+            let str = num.toString();
+            let ids = [];
+            for(let i=0; i<str.length; i++) {
+                let c = endCol - str.length + 1 + i;
+                setCell(r, c, str[i]);
+                ids.push(`r${r}c${c}`);
+            }
+            return ids;
+        }
+
+        function startNewRandomA() {
+            let type = document.getElementById('digit-select-A').value;
+            let N, D;
+            if (type === '2') {
+                N = randomBetween(20, 99);
+                D = randomBetween(11, 40);
+                while (N < D) D = randomBetween(11, 40);
+            } else {
+                N = randomBetween(100, 999);
+                D = randomBetween(11, 99);
+            }
+
+            // 初始化 HTML 表格架構 (固定 8列 x 7欄)
+            let html = '<table class="math-table">';
+            for(let r=0; r<8; r++) {
+                html += '<tr>';
+                for(let c=0; c<7; c++) {
+                    let extraStyle = (r === 1 && c >= 3) ? 'border-top: 3px solid var(--text-main);' : '';
+                    html += `<td class="math-cell" id="r${r}c${c}" style="${extraStyle}"></td>`;
+                }
+                html += '</tr>';
+            }
+            html += '</table>';
+            document.getElementById('board-container-A').innerHTML = html;
+
+            buildDivisionSteps(N, D);
+            stepA = 0;
+            updateViewA();
+        }
+
+        function buildDivisionSteps(N, D) {
+            animA = [];
+            let N_str = N.toString(), D_str = D.toString();
+            let curShow = [];
+
+            // 1. 初始化算式
+            let d_ids = placeNumber(1, 1, D);
+            setCell(1, 2, ')');
+            let sym_id = ['r1c2'];
+            let n_ids = placeNumber(1, 2 + N_str.length, N);
+
+            curShow.push(...d_ids, ...sym_id, ...n_ids);
+            animA.push({
+                title: "準備計算",
+                desc: `寫出直式，計算 <b>${N} ÷ ${D}</b>。<br>點擊「下一步」開始。`,
+                show: [...curShow], hl: []
+            });
+
+            // 2. 判斷要看的位數
+            let part1 = parseInt(N_str.substring(0, 2));
+            let endCol1 = 4;
+            let nextIdx = 2; // 下一個要拉下來的數字索引
+            
+            if (part1 < D && N_str.length > 2) {
+                part1 = parseInt(N_str.substring(0, 3));
+                endCol1 = 5;
+                nextIdx = 3;
+            }
+
+            let n1_ids = [];
+            for(let c = 3; c <= endCol1; c++) n1_ids.push(`r1c${c}`);
+
+            let readMsg = part1 !== parseInt(N_str.substring(0, 2)) 
+                ? `前兩位 ${parseInt(N_str.substring(0, 2))} 不夠除以 ${D}，所以我們要看前三位 <b>${part1}</b>。` 
+                : `前兩位 <b>${part1}</b> 足夠除以 ${D}。`;
+
+            animA.push({
+                title: "1. 觀察被除數",
+                desc: `除數是兩位數 (${D})，所以先看被除數的前面。<br>${readMsg}`,
+                show: [...curShow], hl: [...d_ids, ...n1_ids]
+            });
+
+            // 3. 第一步除法
+            let q1 = Math.floor(part1 / D);
+            let sub1 = q1 * D;
+            let rem1 = part1 - sub1;
+
+            let q1_ids = placeNumber(0, endCol1, q1);
+            curShow.push(...q1_ids);
+            animA.push({
+                title: "2. 寫上商數",
+                desc: `<b>${part1} ÷ ${D}</b>，最多可以放 <b>${q1}</b> 個 ${D}。<br>把商數 <b>${q1}</b> 寫在上方對齊的位置。`,
+                show: [...curShow], hl: [...q1_ids]
+            });
+
+            let sub1_ids = placeNumber(2, endCol1, sub1);
+            setCell(2, endCol1 - sub1.toString().length, '-');
+            curShow.push(...sub1_ids, `r2c${endCol1 - sub1.toString().length}`);
+            animA.push({
+                title: "3. 相乘",
+                desc: `把商數與除數相乘：<br><b>${q1} × ${D} = ${sub1}</b>。<br>寫在下方準備相減。`,
+                show: [...curShow], hl: [...d_ids, ...q1_ids, ...sub1_ids]
+            });
+
+            // 畫第一條減法線
+            for(let c = 3; c <= endCol1; c++) {
+                setCell(3, c, '<hr style="border:none; border-top:3px solid var(--text-main); margin:0;">');
+                curShow.push(`r3c${c}`);
+            }
+
+            let r1_ids = placeNumber(4, endCol1, rem1);
+            curShow.push(...r1_ids);
+            animA.push({
+                title: "4. 相減",
+                desc: `<b>${part1} - ${sub1} = ${rem1}</b>。<br>畫上橫線，並寫下餘數 ${rem1}。`,
+                show: [...curShow], hl: [...sub1_ids, ...n1_ids, ...r1_ids]
+            });
+
+            // 如果還有數字要拉下來 (三位數除法)
+            if (nextIdx < N_str.length) {
+                let downDigit = N_str[nextIdx];
+                let down_id = `r4c${endCol1 + 1}`;
+                setCell(4, endCol1 + 1, downDigit);
+                curShow.push(down_id);
+
+                let part2 = rem1 * 10 + parseInt(downDigit);
+                let p2_ids = [...r1_ids, down_id];
+
+                animA.push({
+                    title: "5. 放下下一位數字",
+                    desc: `把被除數的下一位數字 <b>${downDigit}</b> 放下來，<br>與剛才的餘數合併成 <b>${part2}</b>。`,
+                    show: [...curShow], hl: [down_id, `r1c${endCol1 + 1}`]
+                });
+
+                let q2 = Math.floor(part2 / D);
+                let sub2 = q2 * D;
+                let rem2 = part2 - sub2;
+
+                let q2_ids = placeNumber(0, endCol1 + 1, q2);
+                curShow.push(...q2_ids);
+                animA.push({
+                    title: "6. 繼續除",
+                    desc: `<b>${part2} ÷ ${D}</b>，可以放 <b>${q2}</b> 個 ${D}。<br>把商數寫在上方。`,
+                    show: [...curShow], hl: [...d_ids, ...p2_ids, ...q2_ids]
+                });
+
+                let sub2_ids = placeNumber(5, endCol1 + 1, sub2);
+                setCell(5, endCol1 + 1 - sub2.toString().length, '-');
+                curShow.push(...sub2_ids, `r5c${endCol1 + 1 - sub2.toString().length}`);
+                animA.push({
+                    title: "7. 相乘",
+                    desc: `<b>${q2} × ${D} = ${sub2}</b>。`,
+                    show: [...curShow], hl: [...d_ids, ...q2_ids, ...sub2_ids]
+                });
+
+                for(let c = 3; c <= endCol1 + 1; c++) {
+                    setCell(6, c, '<hr style="border:none; border-top:3px solid var(--text-main); margin:0;">');
+                    curShow.push(`r6c${c}`);
+                }
+
+                let r2_ids = placeNumber(7, endCol1 + 1, rem2);
+                curShow.push(...r2_ids);
+                animA.push({
+                    title: "8. 相減 (完成)",
+                    desc: `<b>${part2} - ${sub2} = ${rem2}</b>。<br><br>計算完成！<br><b>答案：${Math.floor(N/D)}...${rem2}</b>`,
+                    show: [...curShow], hl: [...q1_ids, ...q2_ids, ...r2_ids]
+                });
+
+            } else {
+                 animA.push({
+                    title: "5. 完成",
+                    desc: `沒有數字可以放下來了，計算完成！<br><br><b>答案：${Math.floor(N/D)}...${rem1}</b>`,
+                    show: [...curShow], hl: [...q1_ids, ...r1_ids]
+                });
+            }
+        }
+
+        function updateViewA() {
+            const data = animA[stepA];
+            document.getElementById('step-counter-A').innerText = `步驟 ${stepA} / ${animA.length - 1}`;
+            document.getElementById('step-title-A').innerText = data.title;
+            document.getElementById('step-desc-A').innerHTML = data.desc;
+
+            // 切換 CSS 顯示與高亮
+            for(let r=0; r<8; r++) {
+                for(let c=0; c<7; c++) {
+                    let id = `r${r}c${c}`;
+                    let el = document.getElementById(id);
+                    if (!el) continue;
+                    if (data.show.includes(id)) el.classList.add('show'); else el.classList.remove('show');
+                    if (data.hl.includes(id)) el.classList.add('hl'); else el.classList.remove('hl');
+                }
+            }
+
+            document.getElementById('btn-prev-A').disabled = stepA === 0;
+            const nextBtn = document.getElementById('btn-next-A');
+            if (stepA === animA.length - 1) { nextBtn.disabled = true; nextBtn.innerText = "教學完成 🎉"; } 
+            else { nextBtn.disabled = false; nextBtn.innerText = stepA === 0 ? "開始教學 🚀" : "下一步 ▶"; }
+        }
+
+        function changeStepA(dir) { stepA = Math.max(0, Math.min(stepA + dir, animA.length - 1)); updateViewA(); }
+        function resetTutorialA() { stepA = 0; updateViewA(); }
+
+
+        // =======================================
+        // 模組 B: 整除性規則 (累積算式版面)
+        // =======================================
+        let stepB = 0;
+        let animB = [];
+
+        function startNewDivisibility() {
+            let rule = parseInt(document.getElementById('rule-select').value);
+            let num;
+            
+            // 50% 機率強迫生成可整除的數字，讓範例更有趣
+            if (Math.random() > 0.5) {
+                num = randomBetween(100, 999);
+                if(rule === 8 || rule === 4) num = randomBetween(1000, 9999); // 特殊規則用大一點的數字
+                num = num - (num % rule); 
+            } else {
+                num = randomBetween(100, 999);
+                if(rule === 8 || rule === 4) num = randomBetween(1000, 9999);
+            }
+
+            animB = [];
+            let numStr = num.toString();
+
+            animB.push({
+                title: `準備判斷`,
+                desc: `我們來判斷 <b>${num}</b> 能否被 <b>${rule}</b> 整除。<br>點擊「下一步」開始檢查。`,
+                html: `<div class="prop-formula" style="color:var(--prop-color);">判斷 ${num} ÷ ${rule}</div>`
+            });
+
+            if (rule === 2 || rule === 5 || rule === 10) {
+                let lastDigit = parseInt(numStr[numStr.length - 1]);
+                let condition = rule === 2 ? (lastDigit % 2 === 0) : rule === 5 ? (lastDigit === 0 || lastDigit === 5) : (lastDigit === 0);
+                let ruleDesc = rule === 2 ? "偶數 (0, 2, 4, 6, 8)" : rule === 5 ? "0 或 5" : "0";
+
+                animB.push({
+                    title: "1. 觀察個位數",
+                    desc: `能被 ${rule} 整除的數，其個位數必須是 <b>${ruleDesc}</b>。<br>這個數字的個位是 <b>${lastDigit}</b>。`,
+                    html: `<div class="prop-formula">➡ 尋找末位：<span style="color:var(--highlight-text)">${lastDigit}</span></div>`
+                });
+                animB.push({
+                    title: "2. 結論",
+                    desc: condition ? `${lastDigit} 符合條件！` : `${lastDigit} 不符合條件。`,
+                    html: `<div class="prop-formula" style="color:${condition?'var(--secondary)':'var(--carry-color)'};">${condition?'✅':'❌'} ${num} ${condition?'能':'不能'}被 ${rule} 整除。</div>`
+                });
+            }
+            else if (rule === 3 || rule === 9) {
+                let sum = 0, sumStr = [];
+                for(let d of numStr) { sum += parseInt(d); sumStr.push(d); }
+                let isDiv = (sum % rule === 0);
+
+                animB.push({
+                    title: "1. 數字相加",
+                    desc: `判斷能否被 ${rule} 整除，要把所有位數的數字相加。`,
+                    html: `<div class="prop-formula">➡ ${sumStr.join(' + ')} = <span style="color:var(--highlight-text)">${sum}</span></div>`
+                });
+                animB.push({
+                    title: "2. 檢查總和",
+                    desc: `判斷總和 <b>${sum}</b> 能否被 ${rule} 整除。<br>${sum} ÷ ${rule} = ${Math.floor(sum/rule)}` + (isDiv ? ' (整除)' : `...${sum%rule}`),
+                    html: `<div class="prop-formula">➡ ${sum} ÷ ${rule} ${isDiv ? '可以整除' : '不能整除'}</div>`
+                });
+                animB.push({
+                    title: "3. 結論",
+                    desc: isDiv ? `因為總和能被 ${rule} 整除，所以原數字也可以！` : `因為總和不能被 ${rule} 整除，所以原數字也不行。`,
+                    html: `<div class="prop-formula" style="color:${isDiv?'var(--secondary)':'var(--carry-color)'};">${isDiv?'✅':'❌'} ${num} ${isDiv?'能':'不能'}被 ${rule} 整除。</div>`
+                });
+            }
+            else if (rule === 4 || rule === 8) {
+                let checkLen = rule === 4 ? 2 : 3;
+                let lastDigits = parseInt(numStr.substring(numStr.length - checkLen));
+                let isDiv = (lastDigits % rule === 0);
+
+                animB.push({
+                    title: `1. 觀察最後 ${checkLen} 位數`,
+                    desc: `判斷 ${rule} 的整除性，只需看最後 ${checkLen} 位數。<br>這個數字的最後 ${checkLen} 位是 <b>${lastDigits}</b>。`,
+                    html: `<div class="prop-formula">➡ 取最後 ${checkLen} 位：<span style="color:var(--highlight-text)">${lastDigits}</span></div>`
+                });
+                animB.push({
+                    title: `2. 檢查最後 ${checkLen} 位`,
+                    desc: `判斷 <b>${lastDigits}</b> 能否被 ${rule} 整除。<br>${lastDigits} ÷ ${rule} = ${Math.floor(lastDigits/rule)}` + (isDiv ? ' (整除)' : `...${lastDigits%rule}`),
+                    html: `<div class="prop-formula">➡ ${lastDigits} ÷ ${rule} ${isDiv ? '可以整除' : '不能整除'}</div>`
+                });
+                animB.push({
+                    title: "3. 結論",
+                    desc: isDiv ? `最後幾位能整除，所以原數字也可以！` : `最後幾位不能整除，所以原數字也不行。`,
+                    html: `<div class="prop-formula" style="color:${isDiv?'var(--secondary)':'var(--carry-color)'};">${isDiv?'✅':'❌'} ${num} ${isDiv?'能':'不能'}被 ${rule} 整除。</div>`
+                });
+            }
+            else if (rule === 6) {
+                let lastDigit = parseInt(numStr[numStr.length - 1]);
+                let isEven = (lastDigit % 2 === 0);
+                
+                let sum = 0, sumStr = [];
+                for(let d of numStr) { sum += parseInt(d); sumStr.push(d); }
+                let isDiv3 = (sum % 3 === 0);
+                
+                let isDiv6 = isEven && isDiv3;
+
+                animB.push({
+                    title: "1. 檢查規則 2 (偶數)",
+                    desc: `能被 6 整除的數，必須<b>同時滿足</b> 2 和 3 的規則。<br>先看末位是否為偶數：末位是 <b>${lastDigit}</b>。`,
+                    html: `<div class="prop-formula">➡ 規則2 (偶數)：${isEven ? '<span style="color:var(--secondary)">通過 ✅</span>' : '<span style="color:var(--carry-color)">失敗 ❌</span>'}</div>`
+                });
+                
+                animB.push({
+                    title: "2. 檢查規則 3 (數字和)",
+                    desc: `再看所有數字相加是否能被 3 整除：<br>${sumStr.join('+')} = <b>${sum}</b>。<br>${sum} ÷ 3 ${isDiv3 ? '可以整除' : '不能整除'}。`,
+                    html: `<div class="prop-formula">➡ 規則3 (數字和)：${isDiv3 ? '<span style="color:var(--secondary)">通過 ✅</span>' : '<span style="color:var(--carry-color)">失敗 ❌</span>'}</div>`
+                });
+
+                animB.push({
+                    title: "3. 結論",
+                    desc: isDiv6 ? `因為同時通過 2 和 3 的規則，所以能被 6 整除！` : `因為沒有同時通過兩項規則，所以不能被 6 整除。`,
+                    html: `<div class="prop-formula" style="color:${isDiv6?'var(--secondary)':'var(--carry-color)'};">${isDiv6?'✅':'❌'} ${num} ${isDiv6?'能':'不能'}被 6 整除。</div>`
+                });
+            }
+
+            stepB = 0;
+            updateViewB();
+        }
+
+        function updateViewB() {
+            const data = animB[stepB];
+            document.getElementById('step-counter-B').innerText = `步驟 ${stepB} / ${animB.length - 1}`;
+            document.getElementById('step-title-B').innerText = data.title;
+            document.getElementById('step-desc-B').innerHTML = data.desc;
+            
+            // 累積顯示之前的步驟 HTML
+            let combinedHTML = '';
+            for(let i=0; i<=stepB; i++) {
+                combinedHTML += animB[i].html;
+            }
+            document.getElementById('board-container-B').innerHTML = combinedHTML;
+
+            document.getElementById('btn-prev-B').disabled = stepB === 0;
+            const nextBtn = document.getElementById('btn-next-B');
+            if (stepB === animB.length - 1) { nextBtn.disabled = true; nextBtn.innerText = "教學完成 🎉"; } 
+            else { nextBtn.disabled = false; nextBtn.innerText = stepB === 0 ? "開始判斷 🚀" : "下一步 ▶"; }
+        }
+
+        function changeStepB(dir) { stepB = Math.max(0, Math.min(stepB + dir, animB.length - 1)); updateViewB(); }
+        function resetTutorialB() { stepB = 0; updateViewB(); }
+
+        // 載入時預設生成各題型
+        window.onload = () => {
+            startNewRandomA();
+            startNewDivisibility();
+        };
+    </script>
+</body>
+</html>
